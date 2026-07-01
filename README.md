@@ -8,16 +8,22 @@ Backend do app [app-notify-water-health](https://github.com/huriellopes/app-noti
 
 Já implementado:
 - `GET  /api/health` — health check
-- `POST /api/auth/register` — cadastro (nome, e-mail, senha)
-- `POST /api/auth/login` — login → `accessToken` (JWT)
-- `GET  /api/auth/me` — dados do usuário autenticado (Bearer token)
+- `POST /api/auth/register` · `POST /api/auth/login` · `GET /api/auth/me` — autenticação (JWT)
+- `GET/PUT /api/profile` — perfil + cálculo/persistência de metas
+- `POST /api/logs/{water,meal,workout}` · `GET /api/logs/today` — registros + XP
+- `POST /api/groups` · `POST /api/groups/join` · `GET /api/groups` · `GET /api/groups/:id/ranking`
 - Motor de cálculo nutricional (`src/nutrition`) espelhado do app
 - Schema Prisma completo do domínio (usuários, perfil, metas, logs, gamificação, grupos, convites)
 
-Próximos (Fase 2):
-- `profile` (salvar dados físicos + recalcular metas)
-- `logs` (água/refeições/treinos) e sincronização com o app
-- `groups` + `invites` (gamificação social e ranking)
+## 📖 Documentação (OpenAPI / Swagger)
+
+Documentação interativa gerada automaticamente em **`/docs`** (e o JSON em `/docs-json`):
+
+- Produção: `https://water-api.cantinbr.com.br/docs`
+- Local: `http://localhost:3000/docs`
+
+Enquanto privada, é protegida por **Basic Auth** (`DOCS_USER` / `DOCS_PASSWORD` no `.env`).
+Para liberar ao público no futuro, basta definir **`DOCS_PUBLIC=true`** e reiniciar o container.
 
 ## Stack
 
