@@ -59,6 +59,8 @@ model User {
   memberships    GroupMember[]
   sentInvites    Invite[]       @relation("InviteInviter")
   posts          Post[]
+  postLikes      PostLike[]
+  comments       Comment[]
 }
 
 // Dados físicos e objetivo — base para o cálculo das metas.
@@ -168,7 +170,33 @@ model Post {
   caption   String
   createdAt DateTime @default(now())
 
+  likes    PostLike[]
+  comments Comment[]
+
   @@index([groupId, createdAt])
+}
+
+model PostLike {
+  id        String   @id @default(uuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([postId, createdAt])
 }
 
 model GroupMember {

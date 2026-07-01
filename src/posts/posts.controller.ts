@@ -3,7 +3,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser, CurrentUserData } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { CreatePostDto } from './dto';
+import { CreateCommentDto, CreatePostDto } from './dto';
 import { PostsService } from './posts.service';
 
 @ApiTags('Feed')
@@ -33,5 +33,33 @@ export class PostsController {
   @Delete('posts/:id')
   remove(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
     return this.posts.remove(user.userId, id);
+  }
+
+  /** Curte/descurte um post (toggle). */
+  @Post('posts/:id/like')
+  like(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
+    return this.posts.toggleLike(user.userId, id);
+  }
+
+  /** Lista os comentários de um post. */
+  @Get('posts/:id/comments')
+  comments(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
+    return this.posts.listComments(user.userId, id);
+  }
+
+  /** Adiciona um comentário. */
+  @Post('posts/:id/comments')
+  addComment(
+    @CurrentUser() user: CurrentUserData,
+    @Param('id') id: string,
+    @Body() dto: CreateCommentDto,
+  ) {
+    return this.posts.addComment(user.userId, id, dto.text);
+  }
+
+  /** Exclui um comentário (somente o autor). */
+  @Delete('comments/:id')
+  removeComment(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
+    return this.posts.removeComment(user.userId, id);
   }
 }

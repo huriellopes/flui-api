@@ -1,4 +1,4 @@
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 
 export class CreatePostDto {
   @IsString()
@@ -12,4 +12,11 @@ export class CreatePostDto {
   @IsOptional()
   @IsString()
   imageMime?: string;
+}
+
+export class CreateCommentDto {
+  @IsString()
+  @MinLength(1)
+  @MaxLength(500)
+  text!: string;
 }
