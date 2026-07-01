@@ -56,14 +56,14 @@ jobs:
             "${{ secrets.CONTABO_USER }}@${{ secrets.CONTABO_HOST }}" \
             "cd '${{ secrets.CONTABO_PATH }}' && \
              docker compose up -d --build && \
-             docker network connect notifywater-net proxy 2>/dev/null || true && \
+             docker network connect flui-net proxy 2>/dev/null || true && \
              docker image prune -f"
 
       - name: Verifica health
         run: |
           ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes \
             "${{ secrets.CONTABO_USER }}@${{ secrets.CONTABO_HOST }}" \
-            "sleep 8 && docker exec notifywater-api wget -qO- http://localhost:3000/api/health"
+            "sleep 8 && docker exec flui-api wget -qO- http://localhost:3000/api/health"
 
   # Gera uma GitHub Release a cada deploy bem-sucedido.
   release:

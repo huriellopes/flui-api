@@ -1,31 +1,31 @@
-# Stack de produção para o Contabo.
+# Stack de produção (Flui API) para o Contabo.
 # A API NÃO expõe porta pública — é publicada pelo Nginx Proxy Manager já existente,
-# conectando o 'proxy' à rede 'notifywater-net'.
+# conectando o container 'proxy' à rede 'flui-net'.
 services:
-  notifywater-db:
+  flui-db:
     image: postgres:16-alpine
-    container_name: notifywater-db
+    container_name: flui-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - notifywater-db-data:/var/lib/postgresql/data
+      - flui-db-data:/var/lib/postgresql/data
     networks:
-      - notifywater-net
+      - flui-net
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  notifywater-api:
+  flui-api:
     build: .
-    container_name: notifywater-api
+    container_name: flui-api
     restart: unless-stopped
     depends_on:
-      notifywater-db:
+      flui-db:
         condition: service_healthy
     environment:
       DATABASE_URL: ${DATABASE_URL}
@@ -44,16 +44,25 @@ services:
       TELEGRAM_THREAD_SUPPORT: ${TELEGRAM_THREAD_SUPPORT}
       TELEGRAM_THREAD_DEBUG: ${TELEGRAM_THREAD_DEBUG}
     volumes:
-      - notifywater-uploads:/app/uploads
+      - flui-uploads:/app/uploads
     expose:
       - "3000"
     networks:
-      - notifywater-net
+      flui-net:
+        # Alias de compatibilidade: o Nginx Proxy Manager ainda encaminha para
+        # "notifywater-api". Mantém o site no ar sem downtime durante o rename.
+        # Pode ser removido depois que o Proxy Host no NPM apontar para "flui-api".
+        aliases:
+          - notifywater-api
 
+# Volumes com nome fixo (independente do nome da pasta/projeto) para os dados
+# persistirem através de renomeações do diretório do compose.
 volumes:
-  notifywater-db-data:
-  notifywater-uploads:
+  flui-db-data:
+    name: flui-db-data
+  flui-uploads:
+    name: flui-uploads
 
 networks:
-  notifywater-net:
-    name: notifywater-net
+  flui-net:
+    name: flui-net

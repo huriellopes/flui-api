@@ -42,13 +42,13 @@ npm run start:dev         # API em http://localhost:3000/api
 
 ## Deploy no Contabo
 
-A stack sobe um Postgres dedicado (`notifywater-db`) e a API (`notifywater-api`) numa rede isolada `notifywater-net`, **sem porta pública**. A publicação é feita pelo Nginx Proxy Manager já existente no servidor, apontando um subdomínio (ex: `api.SEU-DOMINIO`) para o container `notifywater-api:3000` — com SSL Let's Encrypt automático.
+A stack sobe um Postgres dedicado (`flui-db`) e a API (`flui-api`) numa rede isolada `flui-net`, **sem porta pública**. A publicação é feita pelo Nginx Proxy Manager já existente no servidor, apontando um subdomínio (ex: `api.SEU-DOMINIO`) para o container `flui-api:3000` — com SSL Let's Encrypt automático.
 
 ```bash
 cp .env.example .env      # defina POSTGRES_PASSWORD, JWT_SECRET (openssl rand -hex 32), DATABASE_URL
 docker compose up -d --build
-# depois, no Nginx Proxy Manager: novo Proxy Host -> forward para notifywater-api:3000
-# (conecte o container 'proxy' à rede notifywater-net)
+# depois, no Nginx Proxy Manager: novo Proxy Host -> forward para flui-api:3000
+# (conecte o container 'proxy' à rede flui-net)
 ```
 
 As migrações são aplicadas automaticamente no start do container (`prisma migrate deploy`).
