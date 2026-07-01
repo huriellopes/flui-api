@@ -1,5 +1,12 @@
 import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
@@ -16,12 +23,16 @@ export class AuthController {
 
   /** Cria uma conta (nome, e-mail, senha) e retorna o token JWT. */
   @Post('register')
+  @ApiCreatedResponse({ description: 'Conta criada; retorna o token JWT e os dados do usuário.' })
+  @ApiBadRequestResponse({ description: 'Dados inválidos ou e-mail já cadastrado.' })
   register(@Body() dto: RegisterDto) {
     return this.auth.register(dto);
   }
 
   /** Autentica com e-mail e senha e retorna o token JWT. */
   @Post('login')
+  @ApiOkResponse({ description: 'Autenticado; retorna o token JWT e os dados do usuário.' })
+  @ApiUnauthorizedResponse({ description: 'E-mail ou senha incorretos.' })
   login(@Body() dto: LoginDto) {
     return this.auth.login(dto);
   }
@@ -30,6 +41,8 @@ export class AuthController {
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Get('me')
+  @ApiOkResponse({ description: 'Dados do usuário autenticado (sem o hash da senha).' })
+  @ApiUnauthorizedResponse({ description: 'Token ausente ou inválido.' })
   async me(@Req() req: { user: { userId: string } }) {
     const user = await this.users.findById(req.user.userId);
     if (!user) return null;
