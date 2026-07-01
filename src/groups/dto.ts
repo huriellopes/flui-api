@@ -2,7 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsString, Length, MinLength } from 'class-validator';
 
 export class CreateGroupDto {
-  @ApiProperty({ description: 'Nome do grupo de gamificação.', example: 'Time Hidratado', minLength: 2 })
+  @ApiProperty({
+    description: 'Nome do grupo de gamificação.',
+    example: 'Time Hidratado',
+    minLength: 2,
+  })
   @IsString()
   @MinLength(2)
   name!: string;

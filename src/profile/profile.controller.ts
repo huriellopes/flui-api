@@ -22,7 +22,9 @@ export class ProfileController {
 
   /** Retorna o perfil do usuário e suas metas diárias mais recentes. */
   @Get()
-  @ApiOkResponse({ description: 'Perfil e metas diárias do usuário (null se ainda não preenchido).' })
+  @ApiOkResponse({
+    description: 'Perfil e metas diárias do usuário (null se ainda não preenchido).',
+  })
   get(@CurrentUser() user: CurrentUserData) {
     return this.profile.get(user.userId);
   }

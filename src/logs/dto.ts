@@ -2,7 +2,11 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsInt, IsOptional, IsString, Min, MinLength } from 'class-validator';
 
 export class CreateWaterDto {
-  @ApiProperty({ description: 'Quantidade de água consumida, em mililitros.', example: 250, minimum: 1 })
+  @ApiProperty({
+    description: 'Quantidade de água consumida, em mililitros.',
+    example: 250,
+    minimum: 1,
+  })
   @IsInt()
   @Min(1)
   waterMl!: number;

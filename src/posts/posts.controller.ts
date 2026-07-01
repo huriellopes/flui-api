@@ -23,7 +23,11 @@ export class PostsController {
 
   /** Cria um post no feed do grupo (foto opcional + descrição). */
   @Post('groups/:groupId/posts')
-  @ApiParam({ name: 'groupId', description: 'ID do grupo onde o post será publicado.', example: 'clx123abc' })
+  @ApiParam({
+    name: 'groupId',
+    description: 'ID do grupo onde o post será publicado.',
+    example: 'clx123abc',
+  })
   @ApiBadRequestResponse({ description: 'Dados inválidos.' })
   @ApiNotFoundResponse({ description: 'Grupo não encontrado ou usuário não é membro.' })
   create(
