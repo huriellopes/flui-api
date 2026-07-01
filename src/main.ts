@@ -7,6 +7,8 @@ import helmet from 'helmet';
 import { join } from 'path';
 
 import { AppModule } from './app.module';
+import { TelegramLogger } from './common/telegram-logger';
+import { telegram } from './telegram/telegram.notifier';
 
 /**
  * Protege a documentação com Basic Auth enquanto ela for privada.
@@ -31,8 +33,38 @@ function docsAuth(req: Request, res: Response, next: NextFunction) {
   res.status(401).send('Autenticação necessária para acessar a documentação.');
 }
 
+/**
+ * Encaminha crashes de baixo nível (fora do ciclo de request) para o Telegram
+ * antes de o processo morrer. Dá o alerta e mantém o comportamento padrão.
+ */
+function registerProcessHandlers(): void {
+  process.on('unhandledRejection', (reason) => {
+    // eslint-disable-next-line no-console
+    console.error('unhandledRejection:', reason);
+    void telegram.system(
+      'critical',
+      'Unhandled Rejection',
+      reason instanceof Error ? reason.message : String(reason),
+      { error: reason instanceof Error ? reason.stack : undefined },
+    );
+  });
+
+  process.on('uncaughtException', (err) => {
+    // eslint-disable-next-line no-console
+    console.error('uncaughtException:', err);
+    void telegram.system('fatal', 'Uncaught Exception', err.message, {
+      error: err.stack,
+    });
+  });
+}
+
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  registerProcessHandlers();
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bufferLogs: true,
+  });
+  // Logger que também espelha warn/error/fatal para o Telegram.
+  app.useLogger(new TelegramLogger());
   // Corpo maior para uploads de imagem em base64.
   app.useBodyParser('json', { limit: '12mb' });
   // CSP off (Swagger UI) e CORP cross-origin (imagens carregadas pelo app).
@@ -63,9 +95,26 @@ async function bootstrap() {
     swaggerOptions: { persistAuthorization: true },
   });
 
+  // Avisa o Telegram quando a API está sendo encerrada (deploy/reinício/crash).
+  app.enableShutdownHooks();
+  for (const signal of ['SIGTERM', 'SIGINT'] as const) {
+    process.on(signal, () => {
+      void telegram.system(
+        'warning',
+        'API encerrando',
+        `Recebido ${signal} — a API está sendo desligada.`,
+      );
+    });
+  }
+
   const port = Number(process.env.PORT ?? 3000);
   await app.listen(port, '0.0.0.0');
   // eslint-disable-next-line no-console
   console.log(`Notify Water Health API rodando na porta ${port}`);
+
+  // Sinaliza no Telegram que a API subiu com sucesso (health de deploy).
+  void telegram.system('info', 'API online', `🚀 A API subiu com sucesso na porta ${port}.`, {
+    version: process.env.npm_package_version ?? '0.1.0',
+  });
 }
 bootstrap();

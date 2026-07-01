@@ -10,6 +10,7 @@ import { NutritionModule } from './nutrition/nutrition.module';
 import { PostsModule } from './posts/posts.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProfileModule } from './profile/profile.module';
+import { TelegramModule } from './telegram/telegram.module';
 import { UsersModule } from './users/users.module';
 
 @ApiTags('Health')
@@ -25,6 +26,7 @@ class HealthController {
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    TelegramModule,
     PrismaModule,
     AuthModule,
     UsersModule,
