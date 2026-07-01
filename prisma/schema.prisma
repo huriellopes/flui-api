@@ -57,6 +57,7 @@ model User {
   ownedGroups    Group[]        @relation("GroupOwner")
   memberships    GroupMember[]
   sentInvites    Invite[]       @relation("InviteInviter")
+  posts          Post[]
 }
 
 // Dados físicos e objetivo — base para o cálculo das metas.
@@ -152,6 +153,21 @@ model Group {
 
   members GroupMember[]
   invites Invite[]
+  posts   Post[]
+}
+
+// Posts do feed social de um grupo (foto + descrição).
+model Post {
+  id        String   @id @default(uuid())
+  groupId   String
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  imageUrl  String?
+  caption   String
+  createdAt DateTime @default(now())
+
+  @@index([groupId, createdAt])
 }
 
 model GroupMember {

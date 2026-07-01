@@ -35,6 +35,9 @@ services:
       DOCS_USER: ${DOCS_USER}
       DOCS_PASSWORD: ${DOCS_PASSWORD}
       DOCS_PUBLIC: ${DOCS_PUBLIC}
+      PUBLIC_URL: ${PUBLIC_URL}
+    volumes:
+      - notifywater-uploads:/app/uploads
     expose:
       - "3000"
     networks:
@@ -42,6 +45,7 @@ services:
 
 volumes:
   notifywater-db-data:
+  notifywater-uploads:
 
 networks:
   notifywater-net:

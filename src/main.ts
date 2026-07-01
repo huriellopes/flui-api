@@ -1,8 +1,10 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
+import { join } from 'path';
 
 import { AppModule } from './app.module';
 
@@ -30,9 +32,18 @@ function docsAuth(req: Request, res: Response, next: NextFunction) {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-  // CSP desligada para o Swagger UI renderizar; a API não serve HTML sensível.
-  app.use(helmet({ contentSecurityPolicy: false }));
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // Corpo maior para uploads de imagem em base64.
+  app.useBodyParser('json', { limit: '12mb' });
+  // CSP off (Swagger UI) e CORP cross-origin (imagens carregadas pelo app).
+  app.use(
+    helmet({
+      contentSecurityPolicy: false,
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
+  // Serve as imagens dos posts em /uploads (fora do prefixo /api).
+  app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads/' });
   app.setGlobalPrefix('api');
   app.enableCors();
   app.useGlobalPipes(

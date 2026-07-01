@@ -7,6 +7,7 @@ import { GamificationModule } from './gamification/gamification.module';
 import { GroupsModule } from './groups/groups.module';
 import { LogsModule } from './logs/logs.module';
 import { NutritionModule } from './nutrition/nutrition.module';
+import { PostsModule } from './posts/posts.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { ProfileModule } from './profile/profile.module';
 import { UsersModule } from './users/users.module';
@@ -32,6 +33,7 @@ class HealthController {
     GamificationModule,
     LogsModule,
     GroupsModule,
+    PostsModule,
   ],
   controllers: [HealthController],
 })
