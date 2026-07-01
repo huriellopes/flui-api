@@ -141,13 +141,16 @@ class TelegramNotifier {
 
   private channelForLevel(level: TelegramLevel): TelegramChannel {
     switch (level) {
+      case 'warning':
       case 'error':
       case 'critical':
       case 'fatal':
+        // Erros, warnings e incidentes acionáveis vão para o tópico de Alertas.
         return 'alerts';
       case 'debug':
         return 'debug';
       default:
+        // info e afins caem no canal "support" (tópico Geral, sem thread).
         return 'support';
     }
   }
@@ -192,8 +195,9 @@ class TelegramNotifier {
       level = 'debug';
       channel = 'debug';
     } else {
+      // Demais 4xx são incidentes acionáveis → tópico de Alertas.
       level = 'warning';
-      channel = 'support';
+      channel = 'alerts';
     }
 
     const name = error instanceof Error ? error.constructor.name : 'Erro';
@@ -214,8 +218,24 @@ class TelegramNotifier {
     return this.notify('warning', title, message, { context });
   }
 
-  /** Evento de sistema (start/stop/heartbeat) — sem throttle. */
+  /**
+   * Crash de sistema (uncaughtException/unhandledRejection) — roteado por nível
+   * (fatal/critical → Alertas) e sem throttle.
+   */
   system(
+    level: TelegramLevel,
+    title: string,
+    message: string,
+    context?: Record<string, unknown>,
+  ): Promise<boolean> {
+    return this.notify(level, title, message, { context, bypassThrottle: true });
+  }
+
+  /**
+   * Aviso/notícia de sistema (API online/encerrando) — sempre no tópico Geral
+   * (canal support, sem thread) e sem throttle.
+   */
+  notice(
     level: TelegramLevel,
     title: string,
     message: string,
@@ -224,7 +244,7 @@ class TelegramNotifier {
     return this.notify(level, title, message, {
       context,
       bypassThrottle: true,
-      channel: level === 'info' ? 'support' : undefined,
+      channel: 'support',
     });
   }
 

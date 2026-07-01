@@ -99,7 +99,7 @@ async function bootstrap() {
   app.enableShutdownHooks();
   for (const signal of ['SIGTERM', 'SIGINT'] as const) {
     process.on(signal, () => {
-      void telegram.system(
+      void telegram.notice(
         'warning',
         'API encerrando',
         `Recebido ${signal} — a API está sendo desligada.`,
@@ -112,8 +112,8 @@ async function bootstrap() {
   // eslint-disable-next-line no-console
   console.log(`Notify Water Health API rodando na porta ${port}`);
 
-  // Sinaliza no Telegram que a API subiu com sucesso (health de deploy).
-  void telegram.system('info', 'API online', `🚀 A API subiu com sucesso na porta ${port}.`, {
+  // Sinaliza no Telegram (tópico Geral) que a API subiu com sucesso.
+  void telegram.notice('info', 'API online', `🚀 A API subiu com sucesso na porta ${port}.`, {
     version: process.env.npm_package_version ?? '0.1.0',
   });
 }
