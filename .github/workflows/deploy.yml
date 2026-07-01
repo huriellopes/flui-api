@@ -1,0 +1,47 @@
+name: Deploy to Contabo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-contabo
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configura SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.CONTABO_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.CONTABO_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Envia arquivos (rsync)
+        run: |
+          rsync -az --delete \
+            --exclude '.git' --exclude '.github' --exclude 'node_modules' \
+            --exclude 'dist' --exclude '.env' \
+            -e "ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes" \
+            ./ "${{ secrets.CONTABO_USER }}@${{ secrets.CONTABO_HOST }}:${{ secrets.CONTABO_PATH }}/"
+
+      - name: Build & up no servidor
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes \
+            "${{ secrets.CONTABO_USER }}@${{ secrets.CONTABO_HOST }}" \
+            "cd '${{ secrets.CONTABO_PATH }}' && \
+             docker compose up -d --build && \
+             docker network connect notifywater-net proxy 2>/dev/null || true && \
+             docker image prune -f"
+
+      - name: Verifica health
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -o StrictHostKeyChecking=yes \
+            "${{ secrets.CONTABO_USER }}@${{ secrets.CONTABO_HOST }}" \
+            "sleep 8 && docker exec notifywater-api wget -qO- http://localhost:3000/api/health"
