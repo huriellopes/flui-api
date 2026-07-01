@@ -1,0 +1,178 @@
+// Prisma schema — Notify Water Health API
+// Modela usuários, perfil/metas, registros de consumo/treino, gamificação e grupos.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Sex {
+  MALE
+  FEMALE
+}
+
+enum ActivityLevel {
+  SEDENTARY
+  LIGHT
+  MODERATE
+  ACTIVE
+  VERY_ACTIVE
+}
+
+enum Goal {
+  LOSE_FAT
+  MAINTAIN
+  GAIN_MUSCLE
+}
+
+enum LogType {
+  WATER
+  MEAL
+  WORKOUT
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  profile        Profile?
+  gamification   Gamification?
+  logs           IntakeLog[]
+  ownedGroups    Group[]        @relation("GroupOwner")
+  memberships    GroupMember[]
+  sentInvites    Invite[]       @relation("InviteInviter")
+}
+
+// Dados físicos e objetivo — base para o cálculo das metas.
+model Profile {
+  id             String        @id @default(uuid())
+  userId         String        @unique
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sex            Sex
+  birthDate      DateTime
+  heightCm       Float
+  weightKg       Float
+  targetWeightKg Float
+  activityLevel  ActivityLevel
+  goal           Goal
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  targets DailyTarget[]
+}
+
+// Metas diárias calculadas (histórico — recalculadas quando o perfil muda).
+model DailyTarget {
+  id         String   @id @default(uuid())
+  profileId  String
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  effectiveFrom DateTime @default(now())
+  calories   Int
+  proteinG   Int
+  carbsG     Int
+  fatG       Int
+  waterMl    Int
+  bmr        Int
+  tdee       Int
+
+  @@index([profileId, effectiveFrom])
+}
+
+// Registro genérico de consumo/treino de um usuário.
+model IntakeLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      LogType
+  loggedAt  DateTime @default(now())
+  // Água
+  waterMl   Int?
+  // Refeição
+  label     String?
+  calories  Int?
+  proteinG  Int?
+  carbsG    Int?
+  fatG      Int?
+  // Treino
+  workoutKind String?
+  durationMin Int?
+
+  @@index([userId, loggedAt])
+}
+
+// Estado de gamificação por usuário.
+model Gamification {
+  id            String   @id @default(uuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  xp            Int      @default(0)
+  level         Int      @default(1)
+  currentStreak Int      @default(0)
+  longestStreak Int      @default(0)
+  lastActiveDay String?  // yyyy-mm-dd
+  updatedAt     DateTime @updatedAt
+
+  achievements Achievement[]
+}
+
+model Achievement {
+  id             String       @id @default(uuid())
+  gamificationId String
+  gamification   Gamification @relation(fields: [gamificationId], references: [id], onDelete: Cascade)
+  code           String       // ex: "first_liter", "7_day_streak"
+  unlockedAt     DateTime     @default(now())
+
+  @@unique([gamificationId, code])
+}
+
+// Grupos de gamificação (ranking + convites).
+model Group {
+  id        String        @id @default(uuid())
+  name      String
+  ownerId   String
+  owner     User          @relation("GroupOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  inviteCode String       @unique
+  createdAt DateTime      @default(now())
+
+  members GroupMember[]
+  invites Invite[]
+}
+
+model GroupMember {
+  id       String   @id @default(uuid())
+  groupId  String
+  group    Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt DateTime @default(now())
+
+  @@unique([groupId, userId])
+}
+
+model Invite {
+  id         String       @id @default(uuid())
+  groupId    String
+  group      Group        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  inviterId  String
+  inviter    User         @relation("InviteInviter", fields: [inviterId], references: [id], onDelete: Cascade)
+  email      String
+  status     InviteStatus @default(PENDING)
+  createdAt  DateTime     @default(now())
+
+  @@index([email])
+}
