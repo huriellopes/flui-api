@@ -48,12 +48,7 @@ services:
     expose:
       - "3000"
     networks:
-      flui-net:
-        # Alias de compatibilidade: o Nginx Proxy Manager ainda encaminha para
-        # "notifywater-api". Mantém o site no ar sem downtime durante o rename.
-        # Pode ser removido depois que o Proxy Host no NPM apontar para "flui-api".
-        aliases:
-          - notifywater-api
+      - flui-net
 
 # Volumes com nome fixo (independente do nome da pasta/projeto) para os dados
 # persistirem através de renomeações do diretório do compose.
