@@ -12,6 +12,17 @@ export class GroupsService {
     return randomBytes(4).toString('hex'); // 8 chars
   }
 
+  /** Exclui um grupo — apenas o dono pode. Remove membros/convites em cascata. */
+  async remove(userId: string, groupId: string) {
+    const group = await this.prisma.group.findUnique({ where: { id: groupId } });
+    if (!group) throw new NotFoundException('Grupo não encontrado');
+    if (group.ownerId !== userId) {
+      throw new ForbiddenException('Apenas o criador do grupo pode excluí-lo');
+    }
+    await this.prisma.group.delete({ where: { id: groupId } });
+    return { ok: true };
+  }
+
   async create(userId: string, dto: CreateGroupDto) {
     // Gera um código único (retry em caso de colisão improvável).
     for (let attempt = 0; attempt < 5; attempt++) {

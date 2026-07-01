@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 import { CurrentUser, CurrentUserData } from '../auth/current-user.decorator';
@@ -35,5 +35,11 @@ export class GroupsController {
   @Get(':id/ranking')
   ranking(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
     return this.groups.ranking(user.userId, id);
+  }
+
+  /** Exclui um grupo (somente o criador). */
+  @Delete(':id')
+  remove(@CurrentUser() user: CurrentUserData, @Param('id') id: string) {
+    return this.groups.remove(user.userId, id);
   }
 }
