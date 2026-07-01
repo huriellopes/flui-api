@@ -22,7 +22,7 @@ export class AuthService {
       name: dto.name,
       passwordHash,
     });
-    return this.sign(user.id, user.email, user.name);
+    return this.sign(user.id, user.email, user.name, user.avatarUrl);
   }
 
   async login(dto: LoginDto) {
@@ -32,11 +32,11 @@ export class AuthService {
     const ok = await bcrypt.compare(dto.password, user.passwordHash);
     if (!ok) throw new UnauthorizedException('Credenciais inválidas');
 
-    return this.sign(user.id, user.email, user.name);
+    return this.sign(user.id, user.email, user.name, user.avatarUrl);
   }
 
-  private sign(sub: string, email: string, name: string) {
+  private sign(sub: string, email: string, name: string, avatarUrl: string | null) {
     const accessToken = this.jwt.sign({ sub, email });
-    return { accessToken, user: { id: sub, email, name } };
+    return { accessToken, user: { id: sub, email, name, avatarUrl } };
   }
 }

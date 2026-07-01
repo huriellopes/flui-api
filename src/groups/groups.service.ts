@@ -78,6 +78,7 @@ export class GroupsService {
           select: {
             id: true,
             name: true,
+            avatarUrl: true,
             gamification: {
               select: { xp: true, level: true, currentStreak: true },
             },
@@ -90,6 +91,7 @@ export class GroupsService {
       .map((m) => ({
         userId: m.user.id,
         name: m.user.name,
+        avatarUrl: m.user.avatarUrl,
         xp: m.user.gamification?.xp ?? 0,
         level: m.user.gamification?.level ?? 1,
         currentStreak: m.user.gamification?.currentStreak ?? 0,

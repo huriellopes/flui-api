@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 
+import { saveBase64Image } from '../common/image-storage';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -31,6 +32,14 @@ export class UsersService {
         ...(data.email !== undefined ? { email: data.email } : {}),
       },
     });
+    const { passwordHash: _omit, ...safe } = user;
+    return safe;
+  }
+
+  /** Atualiza a foto de perfil (upload base64). */
+  async updateAvatar(userId: string, imageBase64: string, imageMime?: string) {
+    const avatarUrl = saveBase64Image(imageBase64, imageMime);
+    const user = await this.prisma.user.update({ where: { id: userId }, data: { avatarUrl } });
     const { passwordHash: _omit, ...safe } = user;
     return safe;
   }

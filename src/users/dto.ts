@@ -19,3 +19,12 @@ export class UpdatePasswordDto {
   @MinLength(8)
   newPassword!: string;
 }
+
+export class UpdateAvatarDto {
+  @IsString()
+  imageBase64!: string;
+
+  @IsOptional()
+  @IsString()
+  imageMime?: string;
+}
