@@ -36,8 +36,9 @@ export class VisionService {
     if (provider === 'ollama') {
       const url = process.env.OLLAMA_URL;
       const model = process.env.OLLAMA_VISION_MODEL ?? 'qwen2.5vl:7b';
+      const apiKey = process.env.OLLAMA_API_KEY || undefined;
       if (!url) return null; // sem host configurado → desativado
-      return new OllamaVisionProvider(url, model, timeout);
+      return new OllamaVisionProvider(url, model, timeout, apiKey);
     }
 
     // Espaço para outros provedores (ex.: 'claude') sem tocar no controller.

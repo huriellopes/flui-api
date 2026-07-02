@@ -1,0 +1,49 @@
+# Stack do host GPU (separado da produção) para o Ollama de visão.
+# Ollama NÃO é exposto direto (não tem auth) — só o Caddy fala com ele e exige
+# um token Bearer, com HTTPS automático (Let's Encrypt) no domínio configurado.
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: flui-ollama
+    restart: unless-stopped
+    volumes:
+      - ollama-models:/root/.ollama
+    expose:
+      - '11434'
+    # GPU NVIDIA (requer driver + nvidia-container-toolkit no host).
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    networks:
+      - ollama-net
+
+  proxy:
+    image: caddy:2-alpine
+    container_name: flui-ollama-proxy
+    restart: unless-stopped
+    depends_on:
+      - ollama
+    ports:
+      - '80:80'
+      - '443:443'
+    environment:
+      OLLAMA_DOMAIN: ${OLLAMA_DOMAIN}
+      OLLAMA_TOKEN: ${OLLAMA_TOKEN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks:
+      - ollama-net
+
+volumes:
+  ollama-models:
+  caddy-data:
+  caddy-config:
+
+networks:
+  ollama-net:

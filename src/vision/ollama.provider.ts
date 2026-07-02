@@ -14,6 +14,7 @@ export class OllamaVisionProvider implements VisionProvider {
     private readonly url: string,
     private readonly model: string,
     private readonly timeoutMs: number,
+    private readonly apiKey?: string,
   ) {
     this.name = `ollama:${model}`;
   }
@@ -22,9 +23,14 @@ export class OllamaVisionProvider implements VisionProvider {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      // O Ollama não tem auth nativa: o host GPU fica atrás de um proxy que
+      // exige este token (Bearer). Sem proxy, a variável fica vazia (no-op).
+      if (this.apiKey) headers.Authorization = `Bearer ${this.apiKey}`;
+
       const res = await fetch(`${this.url.replace(/\/$/, '')}/api/generate`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         signal: controller.signal,
         body: JSON.stringify({
           model: this.model,
