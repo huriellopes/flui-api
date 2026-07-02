@@ -1,0 +1,13 @@
+# HTTPS automático (Let's Encrypt) para o domínio do host GPU.
+# Só passa a requisição para o Ollama se vier com o token Bearer correto.
+{$OLLAMA_DOMAIN} {
+	@unauthorized not header Authorization "Bearer {$OLLAMA_TOKEN}"
+	respond @unauthorized "forbidden" 403
+
+	reverse_proxy ollama:11434 {
+		# Análises de imagem podem demorar; dá folga no timeout.
+		transport http {
+			read_timeout 120s
+		}
+	}
+}
