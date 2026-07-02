@@ -5,8 +5,10 @@ import {
   ApiCreatedResponse,
   ApiOkResponse,
   ApiTags,
+  ApiTooManyRequestsResponse,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
@@ -22,17 +24,23 @@ export class AuthController {
   ) {}
 
   /** Cria uma conta (nome, e-mail, senha) e retorna o token JWT. */
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('register')
   @ApiCreatedResponse({ description: 'Conta criada; retorna o token JWT e os dados do usuário.' })
   @ApiBadRequestResponse({ description: 'Dados inválidos ou e-mail já cadastrado.' })
+  @ApiTooManyRequestsResponse({ description: 'Muitas tentativas — tente novamente em instantes.' })
   register(@Body() dto: RegisterDto) {
     return this.auth.register(dto);
   }
 
   /** Autentica com e-mail e senha e retorna o token JWT. */
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @Post('login')
   @ApiOkResponse({ description: 'Autenticado; retorna o token JWT e os dados do usuário.' })
   @ApiUnauthorizedResponse({ description: 'E-mail ou senha incorretos.' })
+  @ApiTooManyRequestsResponse({
+    description: 'Muitas tentativas de login — tente novamente em instantes.',
+  })
   login(@Body() dto: LoginDto) {
     return this.auth.login(dto);
   }

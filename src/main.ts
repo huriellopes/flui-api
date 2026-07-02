@@ -65,6 +65,10 @@ async function bootstrap() {
   });
   // Logger que também espelha warn/error/fatal para o Telegram.
   app.useLogger(new TelegramLogger());
+  // Atrás do Nginx Proxy Manager: confia no 1º proxy para obter o IP real do
+  // cliente (X-Forwarded-For). Essencial para o rate limiting por IP e para os
+  // logs/alertas registrarem o IP correto (e não o do proxy).
+  app.set('trust proxy', 1);
   // Corpo maior para uploads de imagem em base64.
   app.useBodyParser('json', { limit: '12mb' });
   // CSP off (Swagger UI) e CORP cross-origin (imagens carregadas pelo app).
@@ -77,7 +81,19 @@ async function bootstrap() {
   // Serve as imagens dos posts em /uploads (fora do prefixo /api).
   app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads/' });
   app.setGlobalPrefix('api');
-  app.enableCors();
+  // CORS: por padrão reflete a origem (apps mobile não enviam Origin). Para
+  // restringir no futuro, defina CORS_ORIGINS="https://a.com,https://b.com".
+  const corsOrigins = (process.env.CORS_ORIGINS ?? '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+  app.enableCors({
+    origin: corsOrigins.length > 0 ? corsOrigins : true,
+    credentials: false,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 86400,
+  });
   app.useGlobalPipes(
     new ValidationPipe({ whitelist: true, transform: true, forbidNonWhitelisted: true }),
   );

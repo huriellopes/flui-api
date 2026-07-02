@@ -1,6 +1,8 @@
 import { Controller, Get, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_GUARD } from '@nestjs/core';
 import { ApiTags } from '@nestjs/swagger';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 import { AuthModule } from './auth/auth.module';
 import { GamificationModule } from './gamification/gamification.module';
@@ -26,6 +28,8 @@ class HealthController {
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    // Rate limiting global (anti brute-force / abuso): 120 req/min por IP.
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 120 }]),
     TelegramModule,
     PrismaModule,
     AuthModule,
@@ -38,5 +42,9 @@ class HealthController {
     PostsModule,
   ],
   controllers: [HealthController],
+  providers: [
+    // Aplica o rate limiting em todas as rotas.
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 })
 export class AppModule {}
