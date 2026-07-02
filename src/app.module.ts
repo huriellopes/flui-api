@@ -2,7 +2,7 @@ import { Controller, Get, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { ApiTags } from '@nestjs/swagger';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { SkipThrottle, ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 import { AuthModule } from './auth/auth.module';
 import { GamificationModule } from './gamification/gamification.module';
@@ -17,6 +17,7 @@ import { UsersModule } from './users/users.module';
 
 @ApiTags('Health')
 @Controller()
+@SkipThrottle() // health check não deve ser limitado (Docker/monitoramento/proxy)
 class HealthController {
   /** Verifica se a API está no ar. */
   @Get('health')

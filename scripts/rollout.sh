@@ -64,6 +64,17 @@ log "green saudável — removendo o antigo e promovendo o green a flui-api"
 docker rm -f flui-api >/dev/null 2>&1 || true
 docker rename "$GREEN" flui-api
 
+# O Nginx Proxy Manager resolve o upstream por variável, com cache de DNS
+# (resolver ... valid=10s). Após remover o container antigo, seu IP poderia ficar
+# no cache por até 10s. Um reload gracioso do nginx zera o cache na hora e força
+# a re-resolução para o container novo — sem derrubar conexões (workers antigos
+# drenam). Não-fatal: se o proxy não estiver acessível, o cache expira sozinho.
+if docker exec proxy nginx -s reload >/dev/null 2>&1; then
+  log "nginx (proxy) recarregado — cache de DNS invalidado"
+else
+  log "aviso: não consegui recarregar o nginx do proxy (cache expira em ~10s)"
+fi
+
 log "limpando imagens órfãs"
 docker image prune -f >/dev/null 2>&1 || true
 
