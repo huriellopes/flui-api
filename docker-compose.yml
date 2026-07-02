@@ -49,6 +49,9 @@ services:
       OLLAMA_API_KEY: ${OLLAMA_API_KEY}
       OLLAMA_VISION_MODEL: ${OLLAMA_VISION_MODEL}
       VISION_TIMEOUT_MS: ${VISION_TIMEOUT_MS}
+      CF_ACCOUNT_ID: ${CF_ACCOUNT_ID}
+      CF_API_TOKEN: ${CF_API_TOKEN}
+      CF_VISION_MODEL: ${CF_VISION_MODEL}
     volumes:
       - flui-uploads:/app/uploads
     expose:

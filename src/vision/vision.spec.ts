@@ -1,4 +1,4 @@
-import { normalizeMealJson } from './vision.types';
+import { extractJson, normalizeMealJson } from './vision.types';
 
 describe('normalizeMealJson', () => {
   it('mapeia as chaves do prompt e coage strings para número', () => {
@@ -38,5 +38,21 @@ describe('normalizeMealJson', () => {
   it('normaliza confidence desconhecida para low', () => {
     expect(normalizeMealJson({ confidence: 'altíssima' }, 'x').confidence).toBe('low');
     expect(normalizeMealJson({ confidence: 'HIGH' }, 'x').confidence).toBe('high');
+  });
+});
+
+describe('extractJson', () => {
+  it('parseia JSON puro', () => {
+    expect(extractJson('{"a":1}')).toEqual({ a: 1 });
+  });
+
+  it('extrai o bloco JSON de um texto livre (modelo tagarela)', () => {
+    const txt = 'Claro! Aqui está: {"dish":"X","calories_kcal":500} espero ter ajudado.';
+    expect(extractJson(txt)).toEqual({ dish: 'X', calories_kcal: 500 });
+  });
+
+  it('retorna objeto vazio quando não há JSON', () => {
+    expect(extractJson('sem json aqui')).toEqual({});
+    expect(extractJson('')).toEqual({});
   });
 });

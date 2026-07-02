@@ -1,13 +1,13 @@
 import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 
+import { CloudflareVisionProvider } from './cloudflare.provider';
 import { OllamaVisionProvider } from './ollama.provider';
 import { MealAnalysis, VisionProvider } from './vision.types';
 
 /**
- * Serviço de visão com provedor trocável por env:
- * - VISION_PROVIDER: "ollama" (padrão). Preparado para outros no futuro.
- * - OLLAMA_URL: URL do host Ollama (ex.: http://gpu-host:11434).
- * - OLLAMA_VISION_MODEL: modelo (ex.: qwen2.5vl:7b, llava:7b).
+ * Serviço de visão com provedor trocável por env (VISION_PROVIDER):
+ * - "ollama"     → OLLAMA_URL, OLLAMA_VISION_MODEL, OLLAMA_API_KEY
+ * - "cloudflare" → CF_ACCOUNT_ID, CF_API_TOKEN, CF_VISION_MODEL (free tier)
  * - VISION_TIMEOUT_MS: timeout por análise (padrão 60000).
  *
  * Se não estiver configurado, `enabled` é false e o endpoint responde 503.
@@ -41,7 +41,14 @@ export class VisionService {
       return new OllamaVisionProvider(url, model, timeout, apiKey);
     }
 
-    // Espaço para outros provedores (ex.: 'claude') sem tocar no controller.
+    if (provider === 'cloudflare') {
+      const accountId = process.env.CF_ACCOUNT_ID;
+      const apiToken = process.env.CF_API_TOKEN;
+      const model = process.env.CF_VISION_MODEL ?? '@cf/llava-hf/llava-1.5-7b-hf';
+      if (!accountId || !apiToken) return null; // sem credenciais → desativado
+      return new CloudflareVisionProvider(accountId, apiToken, model, timeout);
+    }
+
     return null;
   }
 }

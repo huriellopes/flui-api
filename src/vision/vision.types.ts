@@ -54,3 +54,25 @@ export function normalizeMealJson(raw: unknown, provider: string): MealAnalysis 
     provider,
   };
 }
+
+/**
+ * Extrai um objeto JSON de um texto livre (modelos que não garantem JSON puro).
+ * Tenta o texto inteiro; se falhar, pega o primeiro bloco {...}.
+ */
+export function extractJson(text: string): unknown {
+  if (!text) return {};
+  try {
+    return JSON.parse(text);
+  } catch {
+    const start = text.indexOf('{');
+    const end = text.lastIndexOf('}');
+    if (start >= 0 && end > start) {
+      try {
+        return JSON.parse(text.slice(start, end + 1));
+      } catch {
+        return {};
+      }
+    }
+    return {};
+  }
+}
