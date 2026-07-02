@@ -53,3 +53,18 @@ export class CreateWorkoutDto {
   @Min(1)
   durationMin!: number;
 }
+
+export class AnalyzeMealPhotoDto {
+  @ApiProperty({
+    description: 'Foto da refeição em base64 (sem o prefixo data URI).',
+    example: 'iVBORw0KGgoAAAANSUhEUgAA...',
+  })
+  @IsString()
+  @MinLength(1)
+  imageBase64!: string;
+
+  @ApiPropertyOptional({ description: 'MIME type da imagem.', example: 'image/jpeg' })
+  @IsOptional()
+  @IsString()
+  imageMime?: string;
+}
