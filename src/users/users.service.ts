@@ -60,6 +60,20 @@ export class UsersService {
     return { ok: true };
   }
 
+  /** Exclui a conta e, em cascata, todos os dados do usuário. Exige a senha. */
+  async deleteAccount(userId: string, password: string) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException('Usuário não encontrado');
+
+    const ok = await bcrypt.compare(password, user.passwordHash);
+    if (!ok) throw new UnauthorizedException('Senha incorreta');
+
+    // Todas as relações do User têm onDelete: Cascade — remove perfil, metas,
+    // logs, gamificação, grupos criados, posts, curtidas, comentários e membros.
+    await this.prisma.user.delete({ where: { id: userId } });
+    return { ok: true };
+  }
+
   findById(id: string) {
     return this.prisma.user.findUnique({
       where: { id },
