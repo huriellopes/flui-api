@@ -37,6 +37,15 @@ export class UpdatePasswordDto {
   newPassword!: string;
 }
 
+export class DeleteAccountDto {
+  @ApiProperty({
+    description: 'Senha atual, para confirmar a exclusão permanente da conta.',
+    example: 'minhaSenha123',
+  })
+  @IsString()
+  password!: string;
+}
+
 export class UpdateAvatarDto {
   @ApiProperty({
     description: 'Nova foto de perfil em base64 (sem o prefixo data URI).',
