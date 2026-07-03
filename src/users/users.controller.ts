@@ -1,4 +1,4 @@
-import { Body, Controller, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Patch, UseGuards } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
@@ -8,7 +8,7 @@ import {
 
 import { CurrentUser, CurrentUserData } from '../auth/current-user.decorator';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { UpdateAvatarDto, UpdatePasswordDto, UpdateProfileDto } from './dto';
+import { DeleteAccountDto, UpdateAvatarDto, UpdatePasswordDto, UpdateProfileDto } from './dto';
 import { UsersService } from './users.service';
 
 @ApiTags('Conta')
@@ -38,5 +38,12 @@ export class UsersController {
   @ApiBadRequestResponse({ description: 'Imagem inválida.' })
   updateAvatar(@CurrentUser() user: CurrentUserData, @Body() dto: UpdateAvatarDto) {
     return this.users.updateAvatar(user.userId, dto.imageBase64, dto.imageMime);
+  }
+
+  /** Exclui permanentemente a conta e todos os dados do usuário (exige a senha). */
+  @Delete('me')
+  @ApiBadRequestResponse({ description: 'Senha incorreta.' })
+  deleteAccount(@CurrentUser() user: CurrentUserData, @Body() dto: DeleteAccountDto) {
+    return this.users.deleteAccount(user.userId, dto.password);
   }
 }
